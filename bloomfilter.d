@@ -2,7 +2,6 @@ import std.stdio;
 import std.math;
 import std.bitmanip;
 import std.range;
-import std.conv;
 import std.digest.crc;
 
 
@@ -80,19 +79,4 @@ class Bloomfilter
     void clearAll() {
 	_b.init(new bool[_m]);
     }
-}
-
-
-void main() {
-    uint n = 100;
-    auto bf = new Bloomfilter(20*n, 5);
-
-    auto l = cast(ubyte[]) "Love";
-    bf.Add(l);
-    auto flag = bf.Test(l);
-    writeln(flag);
-
-    auto sd = cast(ubyte[]) "^^aacsv";
-    auto flag2 = bf.Test(sd);
-    writeln(flag2);
 }
