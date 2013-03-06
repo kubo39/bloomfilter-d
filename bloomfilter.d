@@ -64,13 +64,15 @@ class Bloomfilter
     }
 
     bool Test(ubyte[] data) {
-	BitArray b_loc;
+	BitArray b_loc, tmp;
 	b_loc.init(new bool[_m]);
 	// writeln("b_locs:", b_loc);
 	foreach(loc; locations(data)){
 	    b_loc.opIndexAssign(true, cast(size_t) loc);
 	}
-	if (_b != b_loc) {
+
+	tmp = b_loc.opOrAssign(_b);
+	if (_b != tmp) {
 	    return false;
 	}
 	return true;
