@@ -1,9 +1,10 @@
-import std.stdio;
 import std.math;
 import std.bitmanip;
-import std.range;
 import std.digest.crc;
 
+debug {
+    import std.stdio;
+}
 
 class Bloomfilter
 {
@@ -37,7 +38,9 @@ class Bloomfilter
 	crc.start();
 	crc.put(data[]);
 	ubyte[4] sum = crc.finish();
-	// writeln("sum :", sum);
+	debug {
+	    writeln("sum :", sum);
+	}
 	auto upper = sum[0 .. 2];
 	auto lower = sum[2 .. 4];
 	uint a = cast(uint) lower[0];
@@ -53,7 +56,9 @@ class Bloomfilter
 	for(int i; i < _k; i++) {
 	    locs ~= cast(uint) (a + b * i) % _m;
 	}
-	// writeln("locs:", locs);
+	debug {
+	    writeln("locs:", locs);
+	}
 	return locs;
     }
 
@@ -66,7 +71,9 @@ class Bloomfilter
     bool Test(ubyte[] data) {
 	BitArray b_loc, tmp;
 	b_loc.init(new bool[_m]);
-	// writeln("b_locs:", b_loc);
+	debug {
+	    writeln("b_locs:", b_loc);
+	}
 	foreach(loc; locations(data)){
 	    b_loc.opIndexAssign(true, cast(size_t) loc);
 	}
