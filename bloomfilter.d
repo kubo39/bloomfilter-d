@@ -22,27 +22,6 @@ private:
     return &(counters[hash2(hash)]);
   }
 
-    void insertHash(uint hash)
-  {
-    ubyte* slot1 = firstSlot(hash);
-    if (!full(slot1)) ++*slot1;
-    ubyte* slot2 = secondSlot(hash);
-    if (!full(slot2)) ++*slot2;
-  }
-
-  void removeHash(uint hash)
-  {
-    ubyte* slot1 = firstSlot(hash);
-    if (!full(slot1)) --*slot1;
-    ubyte* slot2 = secondSlot(hash);
-    if (!full(slot2)) --*slot2;
-  }
-
-  bool mightContainHash(uint hash)
-  {
-    return *firstSlot(hash) != 0 && *secondSlot(hash) != 0;
-  }
-
 public:
 
   void clear()
@@ -52,17 +31,24 @@ public:
 
   void insert(T)(T elem) if ( __traits(isIntegral, T) )
   {
-    insertHash(bloomHash!T(elem));
+    ubyte* slot1 = firstSlot(bloomHash!T(elem));
+    if (!full(slot1)) ++*slot1;
+    ubyte* slot2 = secondSlot(bloomHash!T(elem));
+    if (!full(slot2)) ++*slot2;
+
   }
 
   void remove(T)(T elem) if ( __traits(isIntegral, T) )
   {
-    removeHash(bloomHash!T(elem));
+    ubyte* slot1 = firstSlot(bloomHash!T(elem));
+    if (!full(slot1)) --*slot1;
+    ubyte* slot2 = secondSlot(bloomHash!T(elem));
+    if (!full(slot2)) --*slot2;
   }
 
   bool mightContain(T)(T elem) if ( __traits(isIntegral, T) )
   {
-    return mightContainHash(bloomHash!T(elem));
+    return *firstSlot(bloomHash!T(elem)) != 0 && *secondSlot(bloomHash!T(elem)) != 0;
   }
 }
 
