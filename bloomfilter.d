@@ -7,6 +7,7 @@ immutable ARRAY_SIZE = 1 << KEY_SIZE;
 immutable KEY_MASK = (1 << KEY_SIZE) - 1;
 immutable KEY_SHIFT = 16;
 
+
 class BloomFilter
 {
 private:
@@ -52,25 +53,30 @@ public:
   }
 }
 
+
 uint bloomHash(T)(T elem) if ( __traits(isIntegral, T) )
 {
   return ((elem >> 32) ^ elem).to!uint;
 }
+
 
 bool full(ubyte* slot)
 {
   return *slot == 0xff;
 }
 
+
 uint hash1(uint hash)
 {
   return hash & KEY_MASK;
 }
 
+
 uint hash2(uint hash)
 {
   return (hash >> KEY_SHIFT) & KEY_MASK;
 }
+
 
 unittest
 {
@@ -91,7 +97,8 @@ unittest
   foreach (i; 0UL..100)
     bf.remove(i);
 
-  foreach(i; 100UL..1000) assert(bf.mightContain(i));
+  foreach(i; 100UL..1000)
+    assert(bf.mightContain(i));
 
   falsePositiove = 0UL.iota(100).filter!(a => bf.mightContain(a)).count;
   assert(falsePositiove < 2);  // 2%.
