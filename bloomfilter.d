@@ -1,87 +1,114 @@
-import std.math;
-import std.bitmanip;
-import std.digest.crc;
+module bloomfilter;
 
-debug import std.stdio;
+import std.conv : to;
 
+immutable KEY_SIZE = 12;
+immutable ARRAY_SIZE = 1 << KEY_SIZE;
+immutable KEY_MASK = (1 << KEY_SIZE) - 1;
+immutable KEY_SHIFT = 16;
 
-class Bloomfilter
+class BloomFilter
 {
-  private uint _m;
-  private uint _k;
-  private BitArray _b;
-  private CRC32 crc;
+  ubyte[ARRAY_SIZE] counters;
 
-  this(uint m, uint k) {
-    _m = m;
-    _k = k;
-    _b.init(new bool[m]);
-    crc.put(cast(ubyte[]) "");
+  ubyte* firstSlot(uint hash)
+  {
+    return &(counters[hash1(hash)]);
   }
 
-  uint[] estimateParameters(uint n, real p) {
-    _m = cast(uint) (-1 * cast(long)n * log(p) / pow(log(2), 2));
-    _k = cast(uint) ceil(log(2) * cast(real) _m / cast(real) n);
-    return [_m, _k];
+  ubyte* secondSlot(uint hash)
+  {
+    return &(counters[hash2(hash)]);
   }
 
-  uint Cap() {
-    return _m;
+  void clear()
+  {
+    counters = (ubyte[ARRAY_SIZE]).init;
   }
 
-  uint K() {
-    return _k;
+  void insertHash(uint hash)
+  {
+    ubyte* slot1 = firstSlot(hash);
+    if (!full(slot1)) ++*slot1;
+    ubyte* slot2 = secondSlot(hash);
+    if (!full(slot2)) ++*slot2;
   }
 
-  uint[] baseHashes(ubyte[] data) {
-    crc.start();
-    crc.put(data[]);
-    ubyte[4] sum = crc.finish();
-    debug writeln("sum :", sum);
-
-    auto upper = sum[0 .. 2];
-    auto lower = sum[2 .. 4];
-    uint a = cast(uint) lower[0];
-    uint b = cast(uint) upper[0];
-    return [a, b];
+  void insert(T)(T elem) if ( __traits(isIntegral, T) )
+  {
+    insertHash(bloomHash!T(elem));
   }
 
-  uint[] locations(ubyte[] data) {
-    uint[] locs;
-    uint[] arr = baseHashes(data);
-    uint a = arr[0];
-    uint b = arr[1];
-    for(int i; i < _k; i++) {
-      locs ~= cast(uint) (a + b * i) % _m;
-    }
-    debug writeln("locs:", locs);
-
-    return locs;
+  void removeHash(uint hash)
+  {
+    ubyte* slot1 = firstSlot(hash);
+    if (!full(slot1)) --*slot1;
+    ubyte* slot2 = secondSlot(hash);
+    if (!full(slot2)) --*slot2;
   }
 
-  void Add(ubyte[] data) {
-    foreach(loc; locations(data)) {
-      _b.opIndexAssign(true, cast(size_t) loc);
-    }
+  void remove(T)(T elem)  if ( __traits(isIntegral, T) )
+  {
+    removeHash(bloomHash!T(elem));
   }
 
-  bool Test(ubyte[] data) {
-    BitArray b_loc, tmp;
-    b_loc.init(new bool[_m]);
-    debug writeln("b_locs:", b_loc);
-
-    foreach(loc; locations(data)){
-      b_loc.opIndexAssign(true, cast(size_t) loc);
-    }
-
-    tmp = b_loc.opOrAssign(_b);
-    if (_b != tmp) {
-      return false;
-    }
-    return true;
+  bool mightContainHash(uint hash)
+  {
+    return *firstSlot(hash) != 0 && *secondSlot(hash) != 0;
   }
 
-  void clearAll() {
-    _b.init(new bool[_m]);
+  bool mightContain(T)(T elem)
+  {
+    return mightContainHash(bloomHash!T(elem));
   }
+}
+
+uint bloomHash(T)(T elem)
+{
+  return ((elem >> 32) ^ elem).to!uint;
+}
+
+bool full(ubyte* slot)
+{
+  return *slot == 0xff;
+}
+
+uint hash1(uint hash)
+{
+  return hash & KEY_MASK;
+}
+
+uint hash2(uint hash)
+{
+  return (hash >> KEY_SHIFT) & KEY_MASK;
+}
+
+unittest
+{
+  import std.algorithm : filter, count;
+  import std.range : iota;
+
+  auto bf = new BloomFilter;
+
+  foreach (i; 0UL..1000)
+    bf.insert(i);
+
+  foreach (i; 0UL..1000)
+    assert(bf.mightContain(i));
+
+  auto falsePositiove = 1001UL.iota(2000).filter!(a => bf.mightContain(a)).count;
+  assert(falsePositiove < 10);  // 1%.
+
+  foreach (i; 0UL..100)
+    bf.remove(i);
+
+  foreach(i; 100UL..1000) assert(bf.mightContain(i));
+
+  falsePositiove = 0UL.iota(100).filter!(a => bf.mightContain(a)).count;
+  assert(falsePositiove < 2);  // 2%.
+
+  bf.clear;
+
+  foreach (i; 0UL..2000)
+    assert(!bf.mightContain(i));
 }
