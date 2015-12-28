@@ -47,7 +47,7 @@ class BloomFilter
     if (!full(slot2)) --*slot2;
   }
 
-  void remove(T)(T elem)  if ( __traits(isIntegral, T) )
+  void remove(T)(T elem) if ( __traits(isIntegral, T) )
   {
     removeHash(bloomHash!T(elem));
   }
