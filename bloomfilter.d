@@ -9,6 +9,7 @@ immutable KEY_SHIFT = 16;
 
 class BloomFilter
 {
+private:
   ubyte[ARRAY_SIZE] counters;
 
   ubyte* firstSlot(uint hash)
@@ -21,22 +22,12 @@ class BloomFilter
     return &(counters[hash2(hash)]);
   }
 
-  void clear()
-  {
-    counters = (ubyte[ARRAY_SIZE]).init;
-  }
-
-  void insertHash(uint hash)
+    void insertHash(uint hash)
   {
     ubyte* slot1 = firstSlot(hash);
     if (!full(slot1)) ++*slot1;
     ubyte* slot2 = secondSlot(hash);
     if (!full(slot2)) ++*slot2;
-  }
-
-  void insert(T)(T elem) if ( __traits(isIntegral, T) )
-  {
-    insertHash(bloomHash!T(elem));
   }
 
   void removeHash(uint hash)
@@ -47,17 +38,29 @@ class BloomFilter
     if (!full(slot2)) --*slot2;
   }
 
-  void remove(T)(T elem) if ( __traits(isIntegral, T) )
-  {
-    removeHash(bloomHash!T(elem));
-  }
-
   bool mightContainHash(uint hash)
   {
     return *firstSlot(hash) != 0 && *secondSlot(hash) != 0;
   }
 
-  bool mightContain(T)(T elem)
+public:
+
+  void clear()
+  {
+    counters = (ubyte[ARRAY_SIZE]).init;
+  }
+
+  void insert(T)(T elem) if ( __traits(isIntegral, T) )
+  {
+    insertHash(bloomHash!T(elem));
+  }
+
+  void remove(T)(T elem) if ( __traits(isIntegral, T) )
+  {
+    removeHash(bloomHash!T(elem));
+  }
+
+  bool mightContain(T)(T elem) if ( __traits(isIntegral, T) )
   {
     return mightContainHash(bloomHash!T(elem));
   }
