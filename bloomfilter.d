@@ -13,12 +13,12 @@ class BloomFilter
 private:
   ubyte[ARRAY_SIZE] counters;
 
-  ubyte* firstSlot(uint hash)
+  ubyte* firstSlot(uint hash) @nogc nothrow
   {
     return &(counters[hash1(hash)]);
   }
 
-  ubyte* secondSlot(uint hash)
+  ubyte* secondSlot(uint hash) @nogc nothrow
   {
     return &(counters[hash2(hash)]);
   }
@@ -60,19 +60,19 @@ uint bloomHash(T)(T elem) if ( __traits(isIntegral, T) )
 }
 
 
-bool full(ubyte* slot)
+bool full(ubyte* slot) @nogc nothrow
 {
   return *slot == 0xff;
 }
 
 
-uint hash1(uint hash)
+uint hash1(uint hash) @nogc nothrow
 {
   return hash & KEY_MASK;
 }
 
 
-uint hash2(uint hash)
+uint hash2(uint hash) @nogc nothrow
 {
   return (hash >> KEY_SHIFT) & KEY_MASK;
 }
