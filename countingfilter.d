@@ -1,4 +1,4 @@
-module bloomfilter;
+module countingfilter;
 
 import std.conv : to;
 
@@ -8,7 +8,7 @@ immutable KEY_MASK = (1 << KEY_SIZE) - 1;
 immutable KEY_SHIFT = 16;
 
 
-class BloomFilter
+class CountingFilter
 {
 private:
   ubyte[ARRAY_SIZE] counters;
@@ -83,28 +83,28 @@ unittest
   import std.algorithm : filter, count;
   import std.range : iota;
 
-  auto bf = new BloomFilter;
+  auto cf = new CountingFilter;
 
   foreach (i; 0UL..1000)
-    bf.insert(i);
+    cf.insert(i);
 
   foreach (i; 0UL..1000)
-    assert(bf.mightContain(i));
+    assert(cf.mightContain(i));
 
-  auto falsePositiove = 1001UL.iota(2000).filter!(a => bf.mightContain(a)).count;
+  auto falsePositiove = 1001UL.iota(2000).filter!(a => cf.mightContain(a)).count;
   assert(falsePositiove < 10);  // 1%.
 
   foreach (i; 0UL..100)
-    bf.remove(i);
+    cf.remove(i);
 
   foreach(i; 100UL..1000)
-    assert(bf.mightContain(i));
+    assert(cf.mightContain(i));
 
-  falsePositiove = 0UL.iota(100).filter!(a => bf.mightContain(a)).count;
+  falsePositiove = 0UL.iota(100).filter!(a => cf.mightContain(a)).count;
   assert(falsePositiove < 2);  // 2%.
 
-  bf.clear;
+  cf.clear;
 
   foreach (i; 0UL..2000)
-    assert(!bf.mightContain(i));
+    assert(!cf.mightContain(i));
 }
