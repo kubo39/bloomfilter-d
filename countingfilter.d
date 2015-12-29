@@ -13,24 +13,25 @@ class CountingFilter
 private:
   ubyte[ARRAY_SIZE] counters;
 
-  ubyte* firstSlot(uint hash) @nogc nothrow
+  ubyte* firstSlot(uint hash) @nogc nothrow pure @safe
   {
     return &(counters[hash1(hash)]);
   }
 
-  ubyte* secondSlot(uint hash) @nogc nothrow
+  ubyte* secondSlot(uint hash) @nogc nothrow pure @safe
   {
     return &(counters[hash2(hash)]);
   }
 
 public:
 
-  void clear()
+  void clear() @nogc nothrow pure @safe
   {
     counters = (ubyte[ARRAY_SIZE]).init;
   }
 
-  void insert(T)(T elem) if ( __traits(isIntegral, T) )
+  void insert(T)(T elem) pure @safe
+    if ( __traits(isIntegral, T) )
   {
     ubyte* slot1 = firstSlot(bloomHash!T(elem));
     if (!full(slot1)) ++*slot1;
@@ -39,7 +40,8 @@ public:
 
   }
 
-  void remove(T)(T elem) if ( __traits(isIntegral, T) )
+  void remove(T)(T elem) pure @safe
+    if ( __traits(isIntegral, T) )
   {
     ubyte* slot1 = firstSlot(bloomHash!T(elem));
     if (!full(slot1)) --*slot1;
@@ -47,32 +49,34 @@ public:
     if (!full(slot2)) --*slot2;
   }
 
-  bool mightContain(T)(T elem) if ( __traits(isIntegral, T) )
+  bool mightContain(T)(T elem) pure @safe
+    if ( __traits(isIntegral, T) )
   {
     return *firstSlot(bloomHash!T(elem)) != 0 && *secondSlot(bloomHash!T(elem)) != 0;
   }
 }
 
 
-uint bloomHash(T)(T elem) if ( __traits(isIntegral, T) )
+uint bloomHash(T)(T elem) pure @safe
+  if ( __traits(isIntegral, T) )
 {
   return ((elem >> 32) ^ elem).to!uint;
 }
 
 
-bool full(ubyte* slot) @nogc nothrow
+bool full(in ubyte* slot) @nogc nothrow pure @safe
 {
   return *slot == 0xff;
 }
 
 
-uint hash1(uint hash) @nogc nothrow
+uint hash1(uint hash) @nogc nothrow pure @safe
 {
   return hash & KEY_MASK;
 }
 
 
-uint hash2(uint hash) @nogc nothrow
+uint hash2(uint hash) @nogc nothrow pure @safe
 {
   return (hash >> KEY_SHIFT) & KEY_MASK;
 }
