@@ -91,8 +91,8 @@ unittest
   foreach (i; 0UL..1000)
     assert(cf.mightContain(i));
 
-  auto falsePositiove = 1001UL.iota(2000).filter!(a => cf.mightContain(a)).count;
-  assert(falsePositiove < 10);  // 1%.
+  auto falsePositive = 1001UL.iota(2000).filter!(a => cf.mightContain(a)).count;
+  assert(falsePositive < 10);  // 1%.
 
   foreach (i; 0UL..100)
     cf.remove(i);
@@ -100,8 +100,8 @@ unittest
   foreach(i; 100UL..1000)
     assert(cf.mightContain(i));
 
-  falsePositiove = 0UL.iota(100).filter!(a => cf.mightContain(a)).count;
-  assert(falsePositiove < 2);  // 2%.
+  falsePositive = 0UL.iota(100).filter!(a => cf.mightContain(a)).count;
+  assert(falsePositive < 2);  // 2%.
 
   cf.clear;
 
