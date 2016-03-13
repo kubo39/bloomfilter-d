@@ -2,13 +2,13 @@ module countingfilter;
 
 import std.conv : to;
 
-immutable KEY_SIZE = 12;
-immutable ARRAY_SIZE = 1 << KEY_SIZE;
-immutable KEY_MASK = (1 << KEY_SIZE) - 1;
-immutable KEY_SHIFT = 16;
+enum KEY_SIZE = 12;
+enum ARRAY_SIZE = 1 << KEY_SIZE;
+enum KEY_MASK = (1 << KEY_SIZE) - 1;
+enum KEY_SHIFT = 16;
 
 
-class CountingFilter
+class CountingFilter(T) if (is(T == long) || is(T == ulong))
 {
 private:
   ubyte[ARRAY_SIZE] counters;
@@ -30,18 +30,15 @@ public:
     counters = (ubyte[ARRAY_SIZE]).init;
   }
 
-  void insert(T)(T elem) pure @safe
-    if ( __traits(isIntegral, T) )
+  void insert(T elem) pure @safe
   {
     ubyte* slot1 = firstSlot(bloomHash!T(elem));
     if (!full(slot1)) ++*slot1;
     ubyte* slot2 = secondSlot(bloomHash!T(elem));
     if (!full(slot2)) ++*slot2;
-
   }
 
-  void remove(T)(T elem) pure @safe
-    if ( __traits(isIntegral, T) )
+  void remove(T elem) pure @safe
   {
     ubyte* slot1 = firstSlot(bloomHash!T(elem));
     if (!full(slot1)) --*slot1;
@@ -49,16 +46,14 @@ public:
     if (!full(slot2)) --*slot2;
   }
 
-  bool mightContain(T)(T elem) pure @safe
-    if ( __traits(isIntegral, T) )
+  bool mightContain(T elem) pure @safe
   {
     return *firstSlot(bloomHash!T(elem)) != 0 && *secondSlot(bloomHash!T(elem)) != 0;
   }
 }
 
 
-uint bloomHash(T)(T elem) pure @safe
-  if ( __traits(isIntegral, T) )
+uint bloomHash(T)(T elem) pure @safe if (is(T == long) || is(T == ulong))
 {
   return ((elem >> 32) ^ elem).to!uint;
 }
@@ -87,7 +82,7 @@ unittest
   import std.algorithm : filter, count;
   import std.range : iota;
 
-  auto cf = new CountingFilter;
+  auto cf = new CountingFilter!long;
 
   foreach (i; 0UL..1000)
     cf.insert(i);
