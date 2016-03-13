@@ -1,0 +1,10 @@
+{
+    "name": "countingfilter",
+    "description": "Simple Counting Bloom Filter.",
+    "license": "MIT",
+    "authors": ["kubo39"],
+    "targetName": "countingfilter",
+    "targetType": "staticLibrary",
+    "targetPath": "build",
+    "workingDirectory": "build"
+}
